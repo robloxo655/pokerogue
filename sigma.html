@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<link href="https://playminigames.net/bundle/app-details.css?v=1" rel="stylesheet" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+/* Hide the click overlay but keep it functional */
+.playByClick {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="screenSettingsContainer" style="display:none;text-align:right;margin-bottom:10px;background:#33363c">
+    <div class="btn-group">
+        <button id="changeFormat">16:9</button>
+        <button id="decreaseSize">-</button>
+        <button id="increaseSize">+</button>
+        <button id="fullscreen">Fullscreen</button>
+    </div>
+</div>
+
+<div class="html5Container" id="html5Container">
+    <div class="layer playByClick"></div>
+</div>
+
+<script>
+$(document).ready(function () {
+
+    var formatKoef = 0.75;
+    var html5Container = $('#html5Container');
+    var screenSettingsContainer = $('.screenSettingsContainer');
+    var playByClick = $('.playByClick');
+
+    // ORIGINAL CLICK LOGIC (REQUIRED)
+    playByClick.on('click', function () {
+
+        var iframeStr =
+            '<iframe scrolling="no" class="emulatorContainer" ' +
+            'sandbox="allow-forms allow-downloads allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-presentation allow-scripts allow-same-origin allow-popups-to-escape-sandbox" ' +
+            'src="https://playpokerogue.com/play/" ' +
+            'allowfullscreen allow="autoplay; fullscreen" ' +
+            'style="width:900px;height:675px;border:0;display:block;margin:auto;"></iframe>';
+
+        html5Container.html(iframeStr);
+        screenSettingsContainer.show();
+
+        initControls();
+    });
+
+    // 🔥 AUTO-TRIGGER THE CLICK (THIS IS THE KEY)
+    setTimeout(function () {
+        playByClick.trigger('click');
+    }, 50);
+
+    function initControls() {
+        var emulator = $('.emulatorContainer');
+        var minWidth = 400;
+        var maxWidth = () => html5Container.width();
+
+        $('#increaseSize').click(() => resize(1));
+        $('#decreaseSize').click(() => resize(-1));
+        $('#changeFormat').click(toggleFormat);
+
+        $('#fullscreen').click(() => {
+            if (emulator[0].requestFullscreen) {
+                emulator[0].requestFullscreen();
+            }
+        });
+
+        function resize(step) {
+            var w = emulator.width() * (1 + step / 10);
+            w = Math.max(minWidth, Math.min(w, maxWidth()));
+            emulator.width(w);
+            emulator.height(Math.ceil(w * formatKoef));
+        }
+
+        function toggleFormat() {
+            formatKoef = formatKoef === 0.75 ? 0.5625 : 0.75;
+            $('#changeFormat').text(formatKoef === 0.75 ? '16:9' : '4:3');
+            resize(0);
+        }
+    }
+});
+</script>
+
+</body>
+</html>
